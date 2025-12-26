@@ -9,3 +9,7 @@ spring:
     url: jdbc:mysql://0.0.0.0:3306/ums?serverTimezone=UTC&useLegacyDatetimeCode=false
     username: root
     password: passw
+
+jwt:
+  secret: "your-super-secret-key-that-is-at-least-256-bits-long-base64-encoded-very-long-string"
+  expiration: 3600000

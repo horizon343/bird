@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import reactor.core.publisher.Mono;
-
 @RestController
 public class RolesController {
 
@@ -24,7 +22,7 @@ public class RolesController {
     Map<String, Object> response = new HashMap<>();
 
     @RequestMapping(method = RequestMethod.GET, path = "/roles")
-    public Mono<ResponseEntity<Map<String, Object>>> getAllRoles() {
+    public ResponseEntity<Map<String, Object>> getAllRoles() {
         Map<String, Roles> roles = umsRepository.findAllRoles();
         if (roles == null) {
             response.put(Constants.CODE, "500");
@@ -35,7 +33,7 @@ public class RolesController {
             response.put(Constants.MESSAGE, "List of Roles has been requested successfully");
             response.put(Constants.DATA, new ArrayList<>(roles.values()));
         }
-        return Mono.just(ResponseEntity.ok().header(Constants.CONTENT_TYPE, Constants.APPLICATION_JSON)
+        return (ResponseEntity.ok().header(Constants.CONTENT_TYPE, Constants.APPLICATION_JSON)
                 .header(Constants.ACCEPT, Constants.APPLICATION_JSON).body(response));
     }
 }
