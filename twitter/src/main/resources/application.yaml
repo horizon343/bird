@@ -16,3 +16,6 @@ ums:
   paths:
     user: /users/user
 
+jwt:
+  secret: "your-super-secret-key-that-is-at-least-256-bits-long-base64-encoded-very-long-string"
+  expiration: 3600000
