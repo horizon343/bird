@@ -12,7 +12,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -25,9 +24,6 @@ public class AuthService {
 
     @Autowired
     private UmsRepository umsRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
     @Autowired
     private JwtService jwtService;
@@ -46,11 +42,7 @@ public class AuthService {
                     )
             );
 
-            Map<UUID, User> allUsers = umsRepository.findAllUsers();
-            User user = allUsers.values().stream()
-                    .filter(u -> u.getEmail().equals(request.getEmail()))
-                    .findFirst()
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+            User user = umsRepository.findUserByEmail(request.getEmail());
 
             String token = jwtService.generateToken(user.getId(), user.getName(), user.getEmail());
 
@@ -71,18 +63,15 @@ public class AuthService {
     public AuthResponse register(RegisterRequest request) {
         log.info("Attempting registration for email: {}", request.getEmail());
 
-        Map<UUID, User> allUsers = umsRepository.findAllUsers();
-        boolean userExists = allUsers.values().stream()
-                .anyMatch(u -> u.getEmail().equals(request.getEmail()));
-
-        if (userExists) {
+        User existingUser = umsRepository.findUserByEmail(request.getEmail());
+        if (existingUser != null) {
             throw new RuntimeException("User with this email already exists");
         }
 
         User newUser = new User();
         newUser.setName(request.getName());
         newUser.setEmail(request.getEmail());
-        newUser.setPassword(request.getPassword()); // passwordEncoder.encode(request.getPassword())
+        newUser.setPassword(request.getPassword());
         newUser.setRoles(new ArrayList<>());
 
         Map<String, Roles> availableRoles = umsRepository.findAllRoles();
@@ -94,14 +83,17 @@ public class AuthService {
         }
 
         UUID userId = umsRepository.createUser(newUser);
-
         if (userId == null) {
             throw new RuntimeException("Failed to create user");
         }
 
         log.info("Registration successful for email: {}", request.getEmail());
 
-        String token = jwtService.generateToken(userId, request.getName(), request.getEmail());
+        String token = jwtService.generateToken(
+                userId,
+                request.getName(),
+                request.getEmail()
+        );
 
         return new AuthResponse(
                 token,

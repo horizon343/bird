@@ -106,4 +106,25 @@ public class JdbcUmsRepository implements UmsRepository {
         });
         return roles;
     }
+
+    @Override
+    public User findUserByEmail(String email) {
+        try {
+            return jdbcTemplate.queryForObject(
+                    Constants.GET_USER_BY_EMAIL,
+                    (rs, rowNum) -> {
+                        User user = new User();
+                        user.setId(DaoHelper.bytesArrayToUuid(rs.getBytes("id")));
+                        user.setName(rs.getString("name"));
+                        user.setEmail(rs.getString("email"));
+                        user.setPassword(rs.getString("password"));
+                        user.setCreated(rs.getInt("created"));
+                        return user;
+                    },
+                    email
+            );
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }
