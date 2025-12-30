@@ -40,7 +40,7 @@ public class JwtAuthenticationWebFilter implements WebFilter {
             return chain.filter(exchange);
         }
 
-        var authentication = new UsernamePasswordAuthenticationToken(email, null, null);
+        var authentication = new UsernamePasswordAuthenticationToken(email, token, null);
         var context = new SecurityContextImpl(authentication);
 
         log.debug("Reactive JWT authentication for user '{}'", email);

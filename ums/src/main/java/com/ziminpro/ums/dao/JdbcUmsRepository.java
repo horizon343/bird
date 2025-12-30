@@ -75,15 +75,39 @@ public class JdbcUmsRepository implements UmsRepository {
     public UUID createUser(User user) {
         long timestamp = Instant.now().getEpochSecond();
         Map<String, Roles> roles = this.findAllRoles();
+
         UUID userId = UUID.randomUUID();
+        UUID lastVisitId = UUID.randomUUID();
 
         try {
-            jdbcTemplate.update(Constants.CREATE_USER, userId.toString(), user.getName(), user.getEmail(),
-                    user.getPassword(), timestamp, null);
+            jdbcTemplate.update(
+                    Constants.CREATE_LOGIN,
+                    lastVisitId.toString(),
+                    0,
+                    0
+            );
+
+            jdbcTemplate.update(
+                    Constants.CREATE_USER,
+                    userId.toString(),
+                    user.getName(),
+                    user.getEmail(),
+                    user.getPassword(),
+                    timestamp,
+                    lastVisitId.toString()
+            );
+
             for (Roles role : user.getRoles()) {
-                jdbcTemplate.update(Constants.ASSIGN_ROLE, userId.toString(),
-                        roles.get(role.getRole()).getRoleId().toString());
+                Roles dbRole = roles.get(role.getRole());
+                if (dbRole != null) {
+                    jdbcTemplate.update(
+                            Constants.ASSIGN_ROLE,
+                            userId.toString(),
+                            dbRole.getRoleId().toString()
+                    );
+                }
             }
+
         } catch (Exception e) {
             return null;
         }
