@@ -10,50 +10,47 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.util.UUID;
 
-@Slf4j
 @Service
+@Slf4j
 public class JwtService {
 
-    @Value("${jwt.secret}")
-    private String jwtSecret;
+    private final SecretKey signingKey;
+    private final long jwtExpiration;
 
-    @Value("${jwt.expiration}")
-    private long jwtExpiration;
+    public JwtService(@Value("${jwt.secret}") String jwtSecret, @Value("${jwt.expiration}") long jwtExpiration) {
+        if (jwtSecret.length() < 32) {
+            throw new IllegalArgumentException("JWT secret must be at least 32 characters long");
+        }
 
-    private SecretKey getSigningKey() {
-        byte[] keyBytes = jwtSecret.getBytes();
-        return Keys.hmacShaKeyFor(keyBytes);
+        this.signingKey = Keys.hmacShaKeyFor(jwtSecret.getBytes());
+        this.jwtExpiration = jwtExpiration;
+    }
+
+    public boolean isTokenValid(String token) {
+        try {
+            extractAllClaims(token);
+            return true;
+        } catch (Exception e) {
+            log.debug("Invalid JWT token: {}", e.getMessage());
+            return false;
+        }
     }
 
     public String extractUsername(String token) {
         return extractAllClaims(token).getSubject();
     }
 
-    public UUID extractUserId(String token) {
-        String userId = (String) extractAllClaims(token).get("userId");
-        return UUID.fromString(userId);
-    }
-
     public String extractEmail(String token) {
-        return (String) extractAllClaims(token).get("email");
+        return extractAllClaims(token).get("email", String.class);
     }
 
-    public boolean isTokenValid(String token) {
-        try {
-            Jwts.parser()
-                    .verifyWith(getSigningKey())
-                    .build()
-                    .parseSignedClaims(token);
-            return true;
-        } catch (Exception e) {
-            log.error("Token validation failed: {}", e.getMessage());
-            return false;
-        }
+    public UUID extractUserId(String token) {
+        return UUID.fromString(extractAllClaims(token).get("userId", String.class));
     }
 
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
-                .verifyWith(getSigningKey())
+                .verifyWith(signingKey)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
