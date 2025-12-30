@@ -19,4 +19,6 @@ public interface UmsRepository {
     int deleteUser(UUID userId);
 
     User findUserByEmail(String email);
+
+    void updateLastVisit(UUID userId);
 }

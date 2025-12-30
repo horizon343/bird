@@ -151,4 +151,15 @@ public class JdbcUmsRepository implements UmsRepository {
             return null;
         }
     }
+
+    @Override
+    public void updateLastVisit(UUID userId) {
+        long timestamp = Instant.now().getEpochSecond();
+
+        jdbcTemplate.update(
+                Constants.UPDATE_LAST_VISIT,
+                timestamp,
+                userId.toString()
+        );
+    }
 }
