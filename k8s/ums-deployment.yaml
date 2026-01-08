@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ums-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ums
+  template:
+    metadata:
+      labels:
+        app: ums
+    spec:
+      containers:
+        - name: ums
+          image: ums:1.3
+          ports:
+            - containerPort: 9000
+          envFrom:
+            - configMapRef:
+                name: ums-config
+            - secretRef:
+                name: app-secrets
